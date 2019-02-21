@@ -1,12 +1,13 @@
-https://trello.com/b/3uW3bt4y/251-nngfs-final-project
+<https://trello.com/b/3uW3bt4y/251-nngfs-final-project>
 
 Learned Python SimpleHTTPServer module.
 Decided on first operations to support: create file, read file, write file.
-Designed master metadata structure and control flow of create/read/write operations. See https://github.com/ecs251-w19-ucdavis/NnGFS/blob/master/Developer.md
+Designed master metadata structure and control flow of create/read/write operations.  
+See <https://github.com/ecs251-w19-ucdavis/NnGFS/blob/master/Developer.md>
 
 TODO: 
 Implement master’s create/read/write APIs. Implement chunkserver read/write.
 How to batch client requests.
 
-https://github.com/ecs251-w19-ucdavis/NnGFS/commits/master
-https://github.com/ecs251-w19-ucdavis/NnGFS/commit/af345866a564fa399e6ca23d3596b5dee14b75dd
+<https://github.com/ecs251-w19-ucdavis/NnGFS/commits/master>
+<https://github.com/ecs251-w19-ucdavis/NnGFS/commit/af345866a564fa399e6ca23d3596b5dee14b75dd>
