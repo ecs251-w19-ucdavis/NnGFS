@@ -126,3 +126,4 @@ But this design does ensure no interleaving of old/new data is ever possible wit
 1. Chunks of same file should be in same chunkserver set as much as possible.
 2. Client batch read/write requests for consecutive chunks read/write.
 3. Client keep TCP connection alive or maintain some type of connection pool to reduce TCP handshake overhead.
+4. Performance: Python HTTP server + python thread sync read/write lock ---> NGINX + POSIX record process read/write locks (fcntl)
