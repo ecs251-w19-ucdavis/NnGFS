@@ -93,6 +93,8 @@ METADATA[file_name][i][?:self] = True
 ## C-CS\_P, CS\_P-CS\_B1, CS\_P-CS\_B2
 #### write(file_name, i, pos, data, {primary x, backup1 y, backup2 z})
 ```
+# Clients should batch requests to reduce TCP handshake overhead
+# or maintain some type of connection pool.
 If (file_name, i-th chunk) has a local file:
     update it*
     return "OK" to client
@@ -108,6 +110,8 @@ if self is primary x:
 ## C-CS
 #### read(file_name, i, pos, len)
 ```
+# Clients should batch requests to reduce TCP handshake overhead
+# or maintain some type of connection pool.
 if (file_name, i-th chunk) has a local file:
     read it*
     return data;
