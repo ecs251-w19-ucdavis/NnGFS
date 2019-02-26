@@ -52,6 +52,8 @@ return to client "OK".
 ```
 start = pos/64MB, end = pos + len / 64MB
 res = []
+## Optimize by arranging chunks of same file to same chunk servers
+## So that clients have a better chance to batch requests.
 for i = start .. end // parallel
     acquire write lock (file_name, i)
     if METADATA has no file_name, i-th chunk:
