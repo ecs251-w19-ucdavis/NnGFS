@@ -121,3 +121,8 @@ otherwise:
 
 Note: * operations use local File System read/write lock. This ensures chunk reads/writes are atomic, but does not guarentee always reading from latest chunk data. (Client might read old data before a concurrent write has occured on that chunk server)  
 But this design does ensure no interleaving of old/new data is ever possible within a chunk.
+
+# Optimization to do
+1. Chunks of same file should be in same chunkserver set as much as possible.
+2. Client batch read/write requests for consecutive chunks read/write.
+3. Client keep TCP connection alive or maintain some type of connection pool to reduce TCP handshake overhead.
