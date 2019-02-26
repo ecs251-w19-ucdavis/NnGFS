@@ -103,7 +103,7 @@ if self is primary x:
     CS_P-CS_B2: write(file_name, i, pos, data, {...})
 ```
 
-## C-M
+## C-CS
 #### read(file_name, i, pos, len)
 ```
 if (file_name, i-th chunk) has a local file:
