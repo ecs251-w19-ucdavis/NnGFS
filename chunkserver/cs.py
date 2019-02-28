@@ -5,6 +5,7 @@ from urlparse import urlparse, parse_qs
 import os
 
 from util.fs_lock import ReadWriteLock
+from util.duplicate import add_to_sync
 
 ROOT_DIR="/tmp/"
 
@@ -33,6 +34,10 @@ def write_unlock(local_path):
     _get(local_path).release_write()
 
 
+def _get_backup_servers(querys):
+    # TODO id or ip
+    return querys['backup']
+
 def to_local_path(filename, chunk):
     return "%s/%d" % (to_local_dir(filename), chunk)
 
@@ -54,7 +59,7 @@ class myHandler(BaseHTTPRequestHandler):
         # Send the html message
         querys = parse_qs(urlparse(self.path).query)
         filename = querys['filename'][0]
-        chunk = int(querys['chunk'][0]) ## TODO fix me
+        chunk = int(querys['chunk'][0]) ## TODO batch me
         local_path = to_local_path(filename, chunk)
         self.send_response(200)
         self.send_header('Content-type','application/octet-stream')
@@ -87,7 +92,7 @@ class myHandler(BaseHTTPRequestHandler):
         finally:
             write_unlock(local_path)
         # TODO: add to to_sync_metadata
-        #add_to_sync(self.path)
+        add_to_sync(filename, chunk, _get_backup_servers(querys))
         self.send_response(200)
         return
 
