@@ -4,6 +4,7 @@ Done:
 ChunkServer read/write working  
 Master Metadata Database Scheme  
 Master logic implemented  
+Basic master socket implemented 
 
 In progress:  
 ChunkServer write replica  
@@ -18,3 +19,4 @@ combine master side with socket communication
 https://github.com/ecs251-w19-ucdavis/NnGFS/commits/master  
 https://github.com/ecs251-w19-ucdavis/NnGFS/commit/b0a97e6c5b76c87c73560c95caf1133a8b46c7c5
 https://github.com/ecs251-w19-ucdavis/NnGFS/blob/master/Master.py
+https://github.com/ecs251-w19-ucdavis/NnGFS/blob/master/webServer.py
