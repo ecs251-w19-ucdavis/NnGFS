@@ -19,4 +19,5 @@ https://github.com/ecs251-w19-ucdavis/NnGFS/commits/master
 https://github.com/ecs251-w19-ucdavis/NnGFS/commit/4b1808ce7c5921c83b92e423df092c19e399c2d6
 https://github.com/ecs251-w19-ucdavis/NnGFS/commit/4cceab3b5b34b89e3fedc27a648d006f30e66eba
 https://github.com/ecs251-w19-ucdavis/NnGFS/commit/50f8a76dbde0a6a4eaa05d911e843e40115174d1
+https://github.com/ecs251-w19-ucdavis/NnGFS/blob/master/master/Master.py
 
