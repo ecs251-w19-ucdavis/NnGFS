@@ -1,0 +1,53 @@
+python cs + 1mb chunksize
+20000 chunks(1048576 bytes) written in 215 seconds
+write throughput 97386038 bytes per seconds
+20000 chunks(1048576 bytes) read in 95 seconds
+read throughput 219318186 bytes per seconds
+
+
+4 parallel client python cs + 1mb chunksize
+
+20000 chunks(1048576 bytes) written in 1087 seconds
+write throughput 19290778 bytes per seconds
+20000 chunks(1048576 bytes) read in 671 seconds
+read throughput 31243013 bytes per seconds
+20000 chunks(1048576 bytes) written in 1087 seconds
+write throughput 19291717 bytes per seconds
+20000 chunks(1048576 bytes) read in 671 seconds
+read throughput 31210982 bytes per seconds
+20000 chunks(1048576 bytes) written in 1087 seconds
+write throughput 19291256 bytes per seconds
+20000 chunks(1048576 bytes) read in 672 seconds
+read throughput 31199702 bytes per seconds
+20000 chunks(1048576 bytes) written in 1087 seconds
+write throughput 19291032 bytes per seconds
+20000 chunks(1048576 bytes) read in 672 seconds
+read throughput 31201509 bytes per seconds
+
+
+####################################################
+
+c cs + 1mb chunksize
+20000 chunks(1048576 bytes) written in 215 seconds
+write throughput 97386038 bytes per seconds
+20000 chunks(1048576 bytes) read in 95 seconds
+read throughput 219318186 bytes per seconds
+
+4 parallel client python cs + 1mb chunksize
+
+20000 chunks(1048576 bytes) written in 808 seconds
+write throughput 25946396 bytes per seconds
+20000 chunks(1048576 bytes) read in 384 seconds
+read throughput 54484675 bytes per seconds
+20000 chunks(1048576 bytes) written in 806 seconds
+write throughput 26002174 bytes per seconds
+20000 chunks(1048576 bytes) read in 389 seconds
+read throughput 53874621 bytes per seconds
+20000 chunks(1048576 bytes) written in 807 seconds
+write throughput 25968424 bytes per seconds
+20000 chunks(1048576 bytes) read in 388 seconds
+read throughput 53924828 bytes per seconds
+20000 chunks(1048576 bytes) written in 808 seconds
+write throughput 25936165 bytes per seconds
+20000 chunks(1048576 bytes) read in 388 seconds
+read throughput 54009347 bytes per seconds
