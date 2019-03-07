@@ -17,3 +17,5 @@ Total system benchmark using iozone or whatever all other groups decide.
 
 https://github.com/ecs251-w19-ucdavis/NnGFS/commits/master  
 https://github.com/ecs251-w19-ucdavis/NnGFS/commit/4b1808ce7c5921c83b92e423df092c19e399c2d6
+https://github.com/ecs251-w19-ucdavis/NnGFS/commit/4cceab3b5b34b89e3fedc27a648d006f30e66eba
+
