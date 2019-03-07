@@ -15,14 +15,16 @@ sudo vi /usr/local/nginx/conf/nginx.conf
             proxy_pass http://127.0.0.1:8888;
         }
 
-
+#  
 https://github.com/bwang0202/nginx-cs
 
-./configure --add-module=/home/bojun/nginx/gfs-nginx
-make
-sudo /usr/local/nginx/sbin/nginx -s stop
-sudo make install
-sudo /usr/local/nginx/sbin/nginx
-tail -f /usr/local/nginx/logs/error.log
+        ./configure --add-module=/home/bojun/nginx/gfs-nginx  
+        make  
+        sudo /usr/local/nginx/sbin/nginx -s stop  
+        sudo make install  
+        sudo /usr/local/nginx/sbin/nginx  
+        tail -f /usr/local/nginx/logs/error.log  
 
-8192 bytes per write request, configurable by changing read_client_Request file threshhold.
+8192 bytes per write request, configurable by changing read_client_Request file threshhold.  
+
+Orginal project https://github.com/bwang0202/gfs-nginx
