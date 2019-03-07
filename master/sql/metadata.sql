@@ -1,29 +1,20 @@
-CREATE TABLE file(
-       FILE_ID             INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-       FILE_NAME           TEXT    NOT NULL,
-       CHUNK_ID            INTEGER NOT NULL,
-       SEGMENT_ID          INTEGER REFERENCES segment(SEGMENT_ID) ON DELETE CASCADE,
-       --
-       CHECK(length(FILE_NAME) > 0),
-       CHECK(CHUNK_ID >= 0)
+
+-- Table to look up ip and port of a chunkserver given cs_id
+CREATE TABLE CsidIp (
+	cs_id INTEGER NOT NULL PRIMARY KEY,
+	ip    TEXT    NOT NULL,
+	port  INTEGER NOT NULL,
+	--
+	UNIQUE(ip, port),
+	CHECK(LENGTH(ip) > 0),
+	CHECK(cs_id > 0),
+	CHECK(port > 0)
 );
 
-CREATE TABLE segment(
-       SEGMENT_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-       PRIMARY_ID          INTEGER     NOT NULL,
-       PRIMARY_ADDRESS     TEXT     NOT NULL,
-       PRIMARY_STATUS      BOOLEAN DEFAULT FALSE,
-       BACKUP1_ID          INTEGER     NOT NULL,
-       BACKUP1_STATUS      BOOLEAN DEFAULT FALSE,
-       BACKUP1_ADDRESS     TEXT     NOT NULL,
-       BACKUP2_ID          INTEGER     NOT NULL,
-       BACKUP2_STATUS      BOOLEAN DEFAULT FALSE,
-       BACKUP2_ADDRESS     TEXT     NOT NULL,
-       --
-       CHECK(PRIMARY_ID > 0),
-       CHECK(BACKUP1_ID > 0),
-       CHECK(BACKUP2_ID > 0),
-       CHECK(length(BACKUP2_ADDRESS) > 0),
-       CHECK(length(BACKUP1_ADDRESS) > 0),
-       CHECK(length(PRIMARY_ADDRESS) > 0)
+-- Table to look up chunckserverID of a filename
+CREATE TABLE FilenameCsid (
+	file_name CHAR(20) NOT NULL PRIMARY KEY,
+	cs_id     INTEGER  NOT NULL,
+	--
+	CHECK(cs_id > 0),
 );
