@@ -1,5 +1,6 @@
 # NnGFS
-developer.md
+
+NGINX ChunkServer has around 75% higher throughput then Python Chunkserver
 
 To run python chunkserver:
 
