@@ -8,17 +8,17 @@ def create_table():
         c = conn.cursor()
         c.execute('''CREATE TABLE FilenameCsid(
                 file_name CHAR(20) NOT NULL PRIMARY KEY,
-           	    cs_id     INTEGER  NOT NULL,
-           	    CHECK(cs_id > 0)
+                cs_id     INTEGER  NOT NULL,
+                CHECK(cs_id > 0)
                 );''')
         c.execute('''CREATE TABLE CsidIp(
-        	    cs_id INTEGER NOT NULL PRIMARY KEY,
-        	    ip    TEXT    NOT NULL,
-        	    port  INTEGER NOT NULL,
-        	    UNIQUE(ip, port),
-        	    CHECK(LENGTH(ip) > 0),
-        	    CHECK(cs_id > 0),
-        	    CHECK(port > 0)
+                cs_id INTEGER NOT NULL PRIMARY KEY,
+                ip    TEXT    NOT NULL,
+                port  INTEGER NOT NULL,
+                UNIQUE(ip, port),
+                CHECK(LENGTH(ip) > 0),
+                CHECK(cs_id > 0),
+                CHECK(port > 0)
                 );''')
         print "Table created successfully";
         return True
