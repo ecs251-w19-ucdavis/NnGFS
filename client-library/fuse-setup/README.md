@@ -36,14 +36,8 @@ raw-commands history:
    37  ls
    38  cd examples/
    39  ls
-   40  python memory.py
-   41  python memory.py mount /tmp
-   42  python memory.py mount /tmp/
-   43  python memory.py mount
-   44  python memory.py mount=/tmp/
    45  ls /tmp/
    46  mkdir /tmp/pyexample
-   47  python memory.py mount=/tmp/pyexample
    48  python memory.py /tmp/pyexample
 
 raw-commands test history:

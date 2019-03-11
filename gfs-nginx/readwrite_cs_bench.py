@@ -16,7 +16,7 @@ def read(filename):
 
 def write(filename):
 	for chunk in range(num_chunks):
-		r = requests.put("%s/?filename=%s&chunk=%d" % (url, filename, chunk), data=data)
+		r = requests.put("%s/?filename=%s&chunk=%d&backupcsid=%d,%d" % (url, filename, chunk, 2, 3), data=data)
 
 # DO IT
 filename = ''.join([random.choice(string.ascii_letters 

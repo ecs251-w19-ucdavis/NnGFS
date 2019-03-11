@@ -1,19 +1,15 @@
 # NnGFS
 
-NGINX ChunkServer has around 75% higher throughput then Python Chunkserver
+To run chunkserver:
+1. Create To Sync database  (In current directory of NGINX if running C server version)
+   cat chunkserver/ToSyncMetadata.sql | sqlite3 sync.db
+2. start replica script
+   python replica.py
+3. Start chunkserver: python2.7 -m chunkserver.cs
+   or follow README in gfs-nginx to start C server.
 
-To run python chunkserver:
-
-    (First time) cat chunkserver/ToSyncMetadata.sql | sqlite3 sync.db
-    python2.7 -m chunkserver.cs
-
-To run C(NGINX) chunkserver:  
-See README.md in gfs-nginx/
-
-upload a chunk:
-
-    curl -XPUT 'http://localhost:8080/?filename=filename2&chunk=2&backup=6&backup=5' \
-    --data "adlsjfalsdfjals" --header 'content-length: 15'
+upload a chunk
+url -XPUT 'http://localhost:8080/?filename=filename2&chunk=2&backup=6,5' --data "adlsjfalsdfjals"
 
 download a chunk
 

@@ -12,6 +12,11 @@ ROOT_DIR="/tmp/"
 localpath_to_rwlock = {}
 mutex = Lock()
 
+MASTER_URL = "http://localhost:8888"
+
+def tell_master(filename, chunk, csid):
+    request.get("%s/?filename=%s&chunk=%d&csid=%s" % (MASTER_URL, filename, chunk, csid))
+
 def _get(local_path):
     mutex.acquire()
     try:
@@ -22,17 +27,20 @@ def _get(local_path):
         mutex.release()
 
 def read_lock(local_path):
-    _get(local_path).acquire_read()
+    #_get(local_path).acquire_read()
+    return
 
 def read_unlock(local_path):
-    _get(local_path).release_read()
+    #_get(local_path).release_read()
+    return
 
 def write_lock(local_path):
-    _get(local_path).acquire_write()
+    #_get(local_path).acquire_write()
+    return
 
 def write_unlock(local_path):
-    _get(local_path).release_write()
-
+    #_get(local_path).release_write()
+    return
 
 def _get_backup_servers(querys):
     # TODO id or ip
@@ -91,8 +99,9 @@ class myHandler(BaseHTTPRequestHandler):
                 f.write(content)
         finally:
             write_unlock(local_path)
+        tell_master(filename, chunk, "csidpython1")
         # TODO: add to to_sync_metadata
-        add_to_sync(filename, chunk, _get_backup_servers(querys))
+        #add_to_sync(filename, chunk, _get_backup_servers(querys))
         self.send_response(200)
         return
 

@@ -1,4 +1,5 @@
 # gfs-nginx
+Choose root_dir carefully. Make sure that directory has enough space.
 sudo vi /usr/local/nginx/conf/nginx.conf
 
         location /write/ {
@@ -18,7 +19,7 @@ sudo vi /usr/local/nginx/conf/nginx.conf
 #  
 https://github.com/bwang0202/nginx-cs
 
-        ./configure --add-module=/home/bojun/nginx/gfs-nginx  
+        ./configure --add-module=/home/bojun/nginx/gfs-nginx --with-ld-opt='-lsqlite3'
         make  
         sudo /usr/local/nginx/sbin/nginx -s stop  
         sudo make install  

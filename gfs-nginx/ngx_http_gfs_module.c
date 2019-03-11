@@ -1,18 +1,22 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <ngx_string.h>
 
 #include <string.h>
+#include <sqlite3.h>
 
 #define DEFAULT_BATCH 4
 #define DEFAULT_CHUNKSIZE 1024 * 1024
 #define DEFAULT_CSID "default_csid"
 #define DEFAULT_ROOTDIR "/tmp/"
+#define DB_PATH "/tmp/tosync.db"
 
 #define SUBREQUEST_MASTER 0
 
 #define ARGS_FILENAME "filename="
 #define ARGS_CHUNK "chunk="
+#define ARGS_BACKUP "backupcsid="
 
 #define my_strncpy(s1, s2, n) strncpy((char *) s1, (const char *) s2, n)
 
@@ -23,10 +27,116 @@ typedef struct {
     ngx_str_t root_dir;
 } ngx_http_gfs_loc_conf_t;
 
+static int
+init_tosync(ngx_conf_t *cf) {
+    sqlite3 *db;
+    char *err_msg = 0;
+    
+    int rc = sqlite3_open(DB_PATH, &db);
+    
+    if (rc != SQLITE_OK) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            "Failed to open database: %s",
+            sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    
+    char *sql = "DROP TABLE IF EXISTS ToSync; \
+                 CREATE TABLE IF NOT EXISTS ToSync ( \
+                    cs_id INTEGER NOT NULL, \
+                    file_path TEXT NOT NULL, \
+                    UNIQUE (cs_id, file_path), \
+                    CHECK(LENGTH(file_path) > 0), \
+                    CHECK(cs_id > 0) \
+                );";
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    
+    if (rc != SQLITE_OK) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            "Failed to create table: %s",
+            sqlite3_errmsg(db));
+        sqlite3_free(err_msg);        
+        sqlite3_close(db);
+        return 1;
+    } 
+    
+    sqlite3_close(db);
+    return 0;
+}
+
+static int
+insert_tosync(char *file_path, char *backup_str,
+              size_t backup_str_len, ngx_log_t *log) {
+    int csids[2] = {0,0};
+    int first = 1;
+    for (unsigned int i = 0; i < backup_str_len; i++) {
+        if (*(backup_str + i) == ',') {
+            first = 0;
+        } else {
+            if (first) {
+                csids[0] = csids[0] * 10 + (*(backup_str + i) - '0');
+            } else {
+                csids[1] = csids[1] * 10 + (*(backup_str + i) - '0');
+            }
+        }
+    }
+    if (csids[0] == 0 || csids[1] == 0) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "parsed csid: %d %d",
+                      csids[0], csids[1]);
+        return 1;
+    }
+
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+
+    int rc = sqlite3_open(DB_PATH, &db);
+    if (rc != SQLITE_OK) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to open database: %s",
+                      sqlite3_errmsg(db));
+        return 1;
+    }
+
+    if (sqlite3_prepare(db, "Insert Into ToSync (file_path, cs_id) values (?, ?), (?, ?);",
+        -1, &stmt, 0) != SQLITE_OK) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to prepare query: %s",
+                      sqlite3_errmsg(db));
+        return 1;
+    }
+    if (sqlite3_bind_text(stmt, 1, file_path, strlen(file_path), SQLITE_STATIC) != SQLITE_OK) {
+        
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to bind 1");
+        return 1;
+    }
+    if (sqlite3_bind_int(stmt, 2, csids[0]) != SQLITE_OK) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to bind 2");
+        return 1;
+    }
+    if (sqlite3_bind_text(stmt, 3, file_path, strlen(file_path), SQLITE_STATIC) != SQLITE_OK) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to bind 3");
+        return 1;
+    }
+    if (sqlite3_bind_int(stmt, 4, csids[1]) != SQLITE_OK) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to bind 4");
+        return 1;
+    }
+
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to step: %s", sqlite3_errmsg(db));
+        return 1;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+
+    return 0;
+}
+
 // return 0 on success, 1 on error
 static int
 parse_args(ngx_str_t args, ngx_str_t *filename,
-    unsigned int *chunk, ngx_log_t *log) {
+    unsigned int *chunk, ngx_log_t *log, int read_request) {
     if (ngx_strncmp(args.data, ARGS_FILENAME, ngx_strlen(ARGS_FILENAME))) {
         ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to parse %s[1]", args);
         return 1;
@@ -46,9 +156,16 @@ parse_args(ngx_str_t args, ngx_str_t *filename,
         return 1;
     }
 
+    unsigned char *end;
+    if (read_request) {
+        end = args.data + args.len;
+    } else {
+        end = (unsigned char *)ngx_strchr(sign + 1 + ngx_strlen(ARGS_CHUNK), '&');
+    }
+
     unsigned int sum = 0;
     for (unsigned char *tmp = sign + 1 + ngx_strlen(ARGS_CHUNK);
-            tmp < args.data + args.len; tmp++) {
+            tmp < end; tmp++) {
         sum = sum * 10 + (*tmp - '0');
     }
     *chunk = sum;
@@ -211,11 +328,13 @@ static void gfs_read_client_body(ngx_http_request_t *r)
     ngx_http_gfs_loc_conf_t  *gfslcf;
     gfslcf = ngx_http_get_module_loc_conf(r, ngx_http_gfs_module);
     char *root = (char *)gfslcf->root_dir.data;
+    ngx_int_t rc;
+    ngx_chain_t out;
 
     // parse arguments
     ngx_str_t filename;
     unsigned int chunk_id = 0;
-    if (parse_args(r->args, &filename, &chunk_id, r->connection->log)) {
+    if (parse_args(r->args, &filename, &chunk_id, r->connection->log, 0)) {
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
@@ -257,13 +376,8 @@ static void gfs_read_client_body(ngx_http_request_t *r)
     ngx_chain_t *request_bufs = r->request_body->bufs;
     ngx_uint_t read = 0;
     for (ngx_chain_t *cl = request_bufs; cl; cl = cl->next) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log,
-                0, "debug delete me reading client body %d bytes",
-                cl->buf->last - cl->buf->pos);
         if (cl->buf->last == cl->buf->pos) continue;
         read += cl->buf->last - cl->buf->pos;
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                        "bojun deleteme %d", cl->buf->last - cl->buf->pos);
         if (fwrite(cl->buf->pos, cl->buf->last - cl->buf->pos, 1, fp) != 1) {
             // TODO how often does this happen, how often does retry help
             ngx_log_error(NGX_LOG_ERR, r->connection->log,
@@ -272,14 +386,31 @@ static void gfs_read_client_body(ngx_http_request_t *r)
             return;
         }
     }
-    ngx_log_error(NGX_LOG_ERR, r->connection->log,
-        0, "debug delete me totally read %d bytes", read);
 
     if (fclose(fp)) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log,
                 0, "Failed to close file");
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
+    }
+
+    // get backup str and add to ToSync table
+    char *backup_str = ngx_strstr(r->args.data, ARGS_BACKUP);
+    if (backup_str) {
+        if (insert_tosync(file_path, backup_str + strlen(ARGS_BACKUP),
+                    r->args.len - ((u_char *)backup_str - r->args.data) - strlen(ARGS_BACKUP),
+                    r->connection->log)) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                    "Cannot insert tosync");
+            ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
+            return;
+        }
+    } else {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log,
+                0, "Cannot find %s in query", ARGS_BACKUP);
+        // JUST NO ARGS_BACKUP argument in query.
+        // ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
+        // return;
     }
 
     if (SUBREQUEST_MASTER) {
@@ -306,7 +437,7 @@ static void gfs_read_client_body(ngx_http_request_t *r)
         psr->data = NULL;
 
         // issue subrequest
-        ngx_int_t rc = ngx_http_subrequest(r, &uri, &args, &sr, psr, NGX_HTTP_SUBREQUEST_IN_MEMORY);
+        rc = ngx_http_subrequest(r, &uri, &args, &sr, psr, NGX_HTTP_SUBREQUEST_IN_MEMORY);
         if (rc != NGX_OK) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, 
                 "Fail issuing subrequest");
@@ -314,6 +445,34 @@ static void gfs_read_client_body(ngx_http_request_t *r)
             return;
         }
     }
+
+    ngx_buf_t *b = ngx_create_temp_buf(r->pool, NGX_OFF_T_LEN);
+    if (b == NULL) {
+        ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
+        return;
+    }
+
+    b->last = ngx_sprintf(b->pos, "%O", read);
+    b->last_buf = 1;
+    b->last_in_chain = 1;
+
+    r->headers_out.status = NGX_HTTP_OK;
+    r->headers_out.content_length_n = b->last - b->pos;
+
+    rc = ngx_http_send_header(r);
+
+    if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+        ngx_http_finalize_request(r, rc);
+        return;
+    }
+
+    out.buf = b;
+    out.next = NULL;
+
+    rc = ngx_http_output_filter(r, &out);
+
+    ngx_http_finalize_request(r, rc);
+    
 }
 
 
@@ -331,7 +490,7 @@ ngx_http_gfs_handler(ngx_http_request_t *r)
         // parse arguments
         ngx_str_t filename;
         unsigned int chunk = 0;
-        if (parse_args(r->args, &filename, &chunk, r->connection->log)) {
+        if (parse_args(r->args, &filename, &chunk, r->connection->log, 1)) {
             return NGX_ERROR;
         }
         // reading a file
@@ -381,6 +540,7 @@ ngx_http_gfs_handler(ngx_http_request_t *r)
             "bojun rc >= NGX_HTTP_SPECIAL_RESPONSE.");
             return rc;
         }
+
         return NGX_DONE;
     }
 
@@ -416,9 +576,8 @@ static void gfs_write_post_handler(ngx_http_request_t *r)
     out.buf = b;
     out.next = NULL;
     r->connection->buffered |= NGX_HTTP_WRITE_BUFFERED;
-    ngx_int_t ret = ngx_http_send_header(r);
-    ret = ngx_http_output_filter(r, &out);
-    ngx_http_finalize_request(r, ret);
+    ngx_http_send_header(r);
+    ngx_http_output_filter(r, &out);
 }
 
 
@@ -429,6 +588,10 @@ ngx_http_gfs(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
     clcf->handler = ngx_http_gfs_handler;
+
+    if (init_tosync(cf)) {
+        return NGX_CONF_ERROR;
+    }
 
     return NGX_CONF_OK;
 }

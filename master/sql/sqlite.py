@@ -21,7 +21,7 @@ def create_table():
     print "Table created successfully";
     conn.commit()
     conn.close()
-    return true
+    return True
 
 def get_chunkserver(filename):
     conn = sqlite3.connect('master.db')
@@ -33,7 +33,7 @@ def get_chunkserver(filename):
     for row in cursor:
         ip = row[0]
         port = row[1]
-    return id, ip, port
+    return (id, ip, port)
 
 
 def exists(filename):
