@@ -68,7 +68,11 @@ def get_filesize(filename):
             SELECT file_size FROM FilenameCsid
             WHERE file_name = ? LIMIT 1;
             """, (filename, ))
-        return c.fetchall()[0]
+        size = c.fetchall()
+        if not size:
+            return 0
+        else:
+            return size[0]
 
 def update_filesize(filename, size):
     with sqlite3.connect(master_db) as conn:
@@ -111,7 +115,7 @@ import traceback
 
 REPLICA_COUNT = 3
 # define the IP and address to blind, here we use the local address
-master_address = ('localhost', 8080)
+master_address = ('localhost', 8000)
 
 class myHandler(BaseHTTPRequestHandler):
     
@@ -127,9 +131,11 @@ class myHandler(BaseHTTPRequestHandler):
         if operation == "write":
             end = querys['end'][0]
             update_filesize(filename, end)
-        
+        self.send_response(200)
+        self.end_headers()
         self.wfile.write(json.dumps({'size': get_filesize(filename),
                 'chunks': get_chunkserver(filename)}))
+
         return
 
     def do_POST(self):
@@ -145,11 +151,15 @@ class myHandler(BaseHTTPRequestHandler):
                 if len(csids) != REPLICA_COUNT:
                     delete_file(filename)
                 else:
+                    self.send_response(200)
+                    self.end_headers()
                     self.wfile.write(json.dumps(csids))
                     return
             csids = choose_chunkservers(REPLICA_COUNT)
             print(csids)
             insert_file(filename, csids)
+            self.send_response(200)
+            self.end_headers()
             self.wfile.write(json.dumps(csids))
         except:
             traceback.print_exc()

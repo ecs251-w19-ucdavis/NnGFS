@@ -1,80 +1,88 @@
 import requests
 import json
 import random
+import traceback
 
 CS = 1024 * 1024
 masterIp = 'http://localhost:'
-masterPort = '8080'
+masterPort = '8000'
 masterUrl = masterIp + masterPort
+
+import logging
+logging.basicConfig(filename='example.log',level=logging.DEBUG)
 
 
 def create_file(filename):
     data = {'filename': filename}
     r = requests.post(masterUrl, params=data)
-    return json.load(r.text)
+    return json.loads(r.text)
 
 
 def get_chunkserver_with_filename(filename):
     send_data = {'filename': filename, 'operation': 'read'}
     r = requests.get(masterUrl, params=send_data)
-    data = json.load(r.text)
+    data = json.loads(r.text)
     # print(r.text)
-    return data[random.randint(0, 2)]
+    return data
 
 
-def get_file_with_chunkserver(filename, data, id):
-    cs_ip = data[1]
-    cs_port = data[2]
-    cs_url = cs_ip + ':' + cs_port + "chunkserver/"
-    send_data = {'filename': filename, 'chunk': id}
-    r = requests.get(cs_url, params=send_data)
+def get_file_with_chunkserver(filename, address, id):
+    cs_ip = address[1]
+    cs_port = address[2]
+    cs_url = 'http://' + cs_ip + ':' + str(cs_port) + "/chunkserver/?filename=%s&chunk=%d" % (filename, id)
+    r = requests.get(cs_url)
     return r.text
 
 def put_file_with_chunkserver(filename, address, id, data, backup_str):
-    cs_ip = data[1]
-    cs_port = data[2]
-    cs_url = cs_ip + ':' + cs_port + "/chunkserver/?filename=%s&chunk=%d&backupcsid=%s" % (filename, id, backup_str)
+    cs_ip = address[1]
+    cs_port = address[2]
+    cs_url = 'http://' + cs_ip + ':' + str(cs_port) + "/chunkserver/?filename=%s&chunk=%d&backupcsid=%s" % (filename, id, backup_str)
+    print(cs_url)
     r = requests.put(cs_url, data=data)
     return r.text
 
 def get_file(filename, chunk_id):
-    addresses = get_chunkserver_with_filename(filename)
+    addresses = get_chunkserver_with_filename(filename)['chunks']
+    print(addresses)
     file_buffer = get_file_with_chunkserver(filename, addresses[0], chunk_id)
     return file_buffer
 
 def put_file(filename, chunk_id, data):
-    addresses = get_chunkserver_with_filename(filename)
-    backup_str = ','.join([x[0] for x in addresses[1:]])
+    addresses = get_chunkserver_with_filename(filename)['chunks']
+    print(addresses)
+    backup_str = ','.join(['%d' % x[0] for x in addresses[1:]])
     put_file_with_chunkserver(filename, addresses[0], chunk_id, data, backup_str)
     return len(data)
 
-# def update_file(filename):
-# def delete_file(filename):
-
-
-r = requests.get('https://api.github.com/events')
-print r.text
-
-# create_file('xxx.txt')
-# get_chunkserver_with_filename('xxx.txt')
-
-
-def write(self, path, data, offset, fh):
+def write(path, data, offset, fh):
     try:
+        if (offset % CS == 0 and len(data) == CS):
+            return put_file(path, offset/CS, data)
         # find the chunkserver to be updated
         end = (offset + len(data)) % CS
         file_buffer = get_file(path, offset/CS)
+        print(file_buffer)
         if len(file_buffer) < end:
             new_buffer = "0" * end
             new_buffer[:len(file_buffer)] = file_buffer
             file_buffer = new_buffer
-        file_buffer[offset % CS: (offset+len(data)) % CS] = data
+        else:
+            file_buffer[offset % CS: (offset+len(data)) % CS] = data
         # write to chunkserver
         return put_file(path, offset/CS, file_buffer)
     except:
+        traceback.print_exc()
         return 0
 
-
-def read(self, path, size, offset, fh):
+def read(path, size, offset, fh):
     file_buffer = get_file(path, offset/CS)
-    return file_buffer[offset % CS: (offset+size) % CS]
+    end = (offset+size) % CS
+    if end == 0:
+        end = -1
+    return file_buffer[offset % CS: end]
+
+# create_file('dtxt')
+# print(write('dtxt', 'a'*CS, 0, 0))
+print(read('dtxt', CS, 0, 0))
+
+
