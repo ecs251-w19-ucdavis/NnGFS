@@ -76,9 +76,9 @@ def read(path, size, offset, fh):
     return file_buffer[offset % CS: end]
 
 #print(create_file('dtxt'))
-#print(write('dtxt', 'a'*CS, CS*2, 0))
+#print(write('dtxt', 'a'*(CS/2), CS*3, 0))
 
-print(write('dtxt', 'z'*(CS/2 - 1), CS*2 + CS/2, 0))
+print(write('dtxt', 'z'*4, CS*3 + CS/2 - 2, 0))
 #print(read('dtxt', CS, 0, 0))
 
 

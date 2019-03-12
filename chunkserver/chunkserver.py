@@ -140,7 +140,7 @@ class myHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Type','application/octet-stream')
         self.end_headers()
 
-        data = None
+        data = ""
         read_lock(local_path)
         try:
             print(local_path)
@@ -148,8 +148,7 @@ class myHandler(BaseHTTPRequestHandler):
                 data = f.read()
         finally:
             read_unlock(local_path)
-        print(len(data))
-        self.wfile.write(json.dumps({"data":data}))
+            self.wfile.write(json.dumps({"data":data}))
         return
 
     def do_PUT(self):
