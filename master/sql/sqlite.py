@@ -37,6 +37,7 @@ def get_chunkserver(filename):
             WHERE file_name=?""",(filename,))
         return c.fetchall()
 
+
 def choose_chunkservers(num):
     with sqlite3.connect(master_db) as conn:
         c = conn.cursor()
@@ -68,7 +69,7 @@ def get_filesize(filename):
             SELECT file_size FROM FilenameCsid
             WHERE file_name = ? LIMIT 1;
             """, (filename, ))
-        return c.fetchAll()[0]
+        return c.fetchall()[0]
 
 def update_filesize(filename, size):
     with sqlite3.connect(master_db) as conn:
@@ -100,3 +101,4 @@ def insert_file(filename, csids):
             WHERE cs_id IN (%s)
             """ % ",".join(["?" for x in t2]),
             tuple(t2))
+
