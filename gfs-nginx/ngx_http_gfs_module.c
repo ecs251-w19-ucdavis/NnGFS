@@ -98,7 +98,7 @@ insert_tosync(char *file_path, char *backup_str,
         return 1;
     }
 
-    if (sqlite3_prepare(db, "Insert Into ToSync (file_path, cs_id) values (?, ?), (?, ?);",
+    if (sqlite3_prepare(db, "Insert OR Ignore Into ToSync (file_path, cs_id) values (?, ?), (?, ?);",
         -1, &stmt, 0) != SQLITE_OK) {
         ngx_log_error(NGX_LOG_ERR, log, 0, "Failed to prepare query: %s",
                       sqlite3_errmsg(db));

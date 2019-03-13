@@ -172,9 +172,10 @@ class myHandler(BaseHTTPRequestHandler):
             write_unlock(local_path)
         #tell_master(filename, chunk, "csidpython1")
         # TODO: add to to_sync_metadata
-        splited = querys['backupcsid'][0].split(',')
-        print(local_path, splited[0], splited[1])
-        add_tosync(local_path, splited[0], splited[1])
+        if 'backupcsid' in querys:
+            splited = querys['backupcsid'][0].split(',')
+            print(local_path, splited[0], splited[1])
+            add_tosync(local_path, splited[0], splited[1])
         self.send_response(200)
         return
 

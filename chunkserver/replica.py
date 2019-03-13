@@ -2,20 +2,22 @@ import requests
 import sqlite3
 import traceback
 import os
+import sys
 
-tosync_db_path = ""
 batch = 10;
 
 def _parse(path):
-    file = os.path.basename(path)
-    chunk = os.path.basename(os.path.dirname(path))
+    chunk = os.path.basename(path)
+    file = os.path.basename(os.path.dirname(path))
     return (file, chunk)
 
 def copy_to_chunkserver(ip, port, path):
     file, chunk = _parse(path)
     with open(path, 'r') as f:
-        r = requests.put("http://%s:%d/chunkserver/?filename=%s&chunk=%d" % (
-            ip, port, file, chunk), data=f.read())
+        url = "http://%s:%s/chunkserver/?filename=%s&chunk=%s" % (
+            ip, str(port), file, str(chunk))
+        print(url)
+        r = requests.put(url, data=f.read())
         print(r.text)
         return True
 
@@ -26,9 +28,9 @@ def get_next_batch():
     with sqlite3.connect(tosync_db_path) as conn:
         cur = conn.cursor()
         cur.execute("""
-            SELECT tosync_id, file_path ip, port
-            FROM ToSync JOIN CsidIp USING using (cs_id)
-            LIMIT 10;""")
+            SELECT tosync_id, file_path, ip, port
+            FROM ToSync JOIN CsidIp USING (cs_id)
+            LIMIT %d;""" % batch)
         return cur.fetchall()
 
 
@@ -43,6 +45,8 @@ def remove_batch(tosync_ids):
 
 
 def main():
+    global tosync_db_path
+    tosync_db_path = sys.argv[1]
     while True:
         try:
             to_copy = get_next_batch()
@@ -50,7 +54,7 @@ def main():
             for (tosync_id, path, ip, port) in get_next_batch():
                 try:
                     if copy_to_chunkserver(ip, port, path):
-                        copied_tosync_ids.add(tosync_id)
+                        copied_tosync_ids.append(tosync_id)
                 except:
                     traceback.print_exc()
                     continue
@@ -58,3 +62,6 @@ def main():
         except:
             traceback.print_exc()
             continue
+
+if __name__ == '__main__':
+    main()

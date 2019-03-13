@@ -3,7 +3,7 @@ import random
 import string
 import time
 
-num_chunks = 1
+num_chunks = 1000
 chunksize = 1024 * 1024
 data = ''.join([random.choice(string.ascii_letters 
             + string.digits) for n in range(chunksize)])
@@ -12,11 +12,11 @@ url = "http://localhost:80/chunkserver"
 
 def read(filename):
 	for chunk in range(num_chunks):
-		r = requests.get("%s/?filename=%s&chunk=%d" % (url, filename, chunk))
+		r = requests.get("%s/?filename=%s&chunk=%d" % (url, filename, chunk % 2))
 
 def write(filename):
 	for chunk in range(num_chunks):
-		r = requests.put("%s/?filename=%s&chunk=%d&backupcsid=%d,%d" % (url, filename, chunk, 2, 3), data=data)
+		r = requests.put("%s/?filename=%s&chunk=%d&backupcsid=%d,%d" % (url, filename, chunk % 2, 2, 3), data=data)
 
 # DO IT
 filename = ''.join([random.choice(string.ascii_letters 
