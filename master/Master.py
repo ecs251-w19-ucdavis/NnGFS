@@ -11,6 +11,7 @@ def create_table():
                 ip    TEXT    NOT NULL,
                 port  INTEGER NOT NULL,
                 count INTEGER NOT NULL DEFAULT 0,
+                alive INTEGER DEFAULT 1,
                 UNIQUE(ip, port),
                 CHECK(LENGTH(ip) > 0),
                 CHECK(cs_id > 0),
@@ -43,7 +44,8 @@ def choose_chunkservers(num):
         c.execute("""
             SELECT cs_id, ip, port
             FROM CsidIp
-            ORDER BY count DESC
+            WHERE alive = 1
+            ORDER BY count ASC
             LIMIT ?
             """, (num, ))
         return c.fetchall()

@@ -7,7 +7,7 @@
 #include <sqlite3.h>
 
 #define DEFAULT_BATCH 4
-#define DEFAULT_CHUNKSIZE 1024 * 1024
+#define DEFAULT_CHUNKSIZE 128 * 1024
 #define DEFAULT_CSID "default_csid"
 #define DEFAULT_ROOTDIR "/tmp/"
 #define DB_PATH "/tmp/tosync.db"

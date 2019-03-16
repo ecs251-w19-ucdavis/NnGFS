@@ -4,7 +4,7 @@ import string
 import time
 
 num_chunks = 1000
-chunksize = 1024 * 1024
+chunksize = 128 * 1024
 data = ''.join([random.choice(string.ascii_letters 
             + string.digits) for n in range(chunksize)])
 
@@ -29,12 +29,3 @@ write_end = time.time()
 
 print("%d chunks(%d bytes) written in %d seconds" % (num_chunks * 20, chunksize, write_end - write_start))
 print("write throughput %d bytes per seconds" % (num_chunks * 20 * chunksize / (write_end - write_start)))
-
-# record read time
-read_start = time.time()
-for i in range(20):
-	read(filename)
-read_end = time.time()
-
-print("%d chunks(%d bytes) read in %d seconds" % (num_chunks * 20, chunksize, read_end - read_start))
-print("read throughput %d bytes per seconds" % (num_chunks * 20 * chunksize / (read_end - read_start)))

@@ -3,6 +3,7 @@ import sqlite3
 import traceback
 import os
 import sys
+import time
 
 batch = 10;
 
@@ -49,6 +50,7 @@ def main():
     tosync_db_path = sys.argv[1]
     while True:
         try:
+            time.sleep(5)
             to_copy = get_next_batch()
             copied_tosync_ids = []
             for (tosync_id, path, ip, port) in get_next_batch():

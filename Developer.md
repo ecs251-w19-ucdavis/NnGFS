@@ -127,3 +127,60 @@ But this design does ensure no interleaving of old/new data is ever possible wit
 2. Client batch read/write requests for consecutive chunks read/write.
 3. Client keep TCP connection alive or maintain some type of connection pool to reduce TCP handshake overhead.
 4. Performance: Python HTTP server + python thread sync read/write lock ---> NGINX + POSIX record process read/write locks (fcntl)
+
+
+
+
+MASTER APIS:
+
+# CREATE NEW FILE
+
+ REQUEST  
+```
+curl -XPOST 'http://localhost:8080/?filename=myfile1'  
+```
+ RESPONSE  
+```
+cs_id, ip, port 
+[
+   [1, "127.0.0.1", 8888],
+   [2, "127.0.0.1", 8889],
+   [3, "127.0.0.1", 8890]
+]
+```
+# Write a chunk
+
+REQUEST
+```
+curl -XGET 'http://localhost:8080/?filename=myfile1&operation=write&end=81960'
+```
+RESPONSE
+```
+{
+  "chunks":
+          [
+           [1, "127.0.0.1", 8888],
+           [2, "127.0.0.1", 8889],
+           [3, "127.0.0.1", 8890]
+          ],
+  "size": [81960]
+}
+```
+# Read a chunk
+
+REQUEST
+```
+curl -XGET 'http://localhost:8080/?filename=myfile1&operation=read'
+```
+RESPONSE
+```
+{
+  "chunks":
+          [
+           [1, "127.0.0.1", 8888],
+           [2, "127.0.0.1", 8889],
+           [3, "127.0.0.1", 8890]
+          ],
+   "size": [81960]
+}
+```

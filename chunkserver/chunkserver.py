@@ -133,6 +133,12 @@ class myHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Send the html message
         querys = parse_qs(urlparse(self.path).query)
+
+        if self.path.find("status") != -1:
+            self.send_response(200)
+            self.end_headers()
+            return
+
         filename = querys['filename'][0]
         chunk = int(querys['chunk'][0]) ## TODO batch me
         local_path = to_local_path(filename, chunk)
